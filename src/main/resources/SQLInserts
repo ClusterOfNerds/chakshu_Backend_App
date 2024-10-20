@@ -14,7 +14,7 @@ CREATE TABLE `user` (
   `role` set('ADMIN','USER','DEVELOPER') DEFAULT NULL,
   `active` tinyint DEFAULT '1',
   PRIMARY KEY (`user_id`)
-)
+);
 
 
 CREATE TABLE `address` (
