@@ -1,0 +1,79 @@
+CREATE DATABASE IF NOT EXISTS chakshu_ecom;
+USE chakshu_ecom;
+
+
+
+CREATE TABLE `user` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `mobile` varchar(255) DEFAULT NULL,
+  `fk_address_id` int DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `role` set('ADMIN','USER','DEVELOPER') DEFAULT NULL,
+  `active` tinyint DEFAULT '1',
+  PRIMARY KEY (`user_id`)
+)
+
+
+CREATE TABLE `address` (
+  `address_id` INT NOT NULL AUTO_INCREMENT,
+  `address1` VARCHAR(255) DEFAULT NULL,
+  `address2` VARCHAR(255) DEFAULT NULL,
+  `city` VARCHAR(255) DEFAULT NULL,
+  `country` VARCHAR(255) DEFAULT NULL,
+  `district` VARCHAR(255) DEFAULT NULL,
+  `pincode` VARCHAR(255) DEFAULT NULL,
+  `state` VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`address_id`)
+);
+
+CREATE TABLE `category` (
+  `category_id` INT NOT NULL AUTO_INCREMENT,
+  `discount` DOUBLE DEFAULT NULL,
+  `sequence` TINYINT DEFAULT NULL,
+  `description` VARCHAR(255) DEFAULT NULL,
+  `name` VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`category_id`)
+);
+
+CREATE TABLE `inventory` (
+  `inventory_id` INT NOT NULL AUTO_INCREMENT,
+  `category_id` INT DEFAULT NULL,
+  `price` DOUBLE DEFAULT NULL,
+  `fk_product_id` INT DEFAULT NULL,
+  `quantity` INT DEFAULT NULL,
+  `color` VARCHAR(255) DEFAULT NULL,
+  `size` SET('SMALL','MEDIUM','LARGE','XLARGE','XXLARGE'),
+  `total_number_of_orders` INT DEFAULT NULL,
+  `cart_touched` INT DEFAULT NULL,
+  `wish_touched` INT DEFAULT NULL,
+  PRIMARY KEY (`inventory_id`)
+);
+
+CREATE TABLE `product` (
+  `product_id` INT NOT NULL AUTO_INCREMENT,
+  `fk_category_id` INT NOT NULL,
+  `price` DOUBLE DEFAULT NULL,
+  `rating` TINYINT DEFAULT NULL,
+  `feedback` VARCHAR(255) DEFAULT NULL,
+  `image_path` VARCHAR(255) DEFAULT NULL,
+  `name` VARCHAR(255) DEFAULT NULL,
+  `specs` VARCHAR(255) DEFAULT NULL,
+  `color` VARBINARY(255) DEFAULT NULL,
+  `sizes` VARBINARY(255) DEFAULT NULL,
+  PRIMARY KEY (`product_id`)
+);
+
+CREATE TABLE `order` (
+  `order_id` INT NOT NULL AUTO_INCREMENT,
+  `fk_user_id` INT NOT NULL,
+  `fk_inventory_id` DOUBLE DEFAULT NULL,
+  `status` SET('ORDERED','DELIVERED','SHIPPED','READY_FOR_PICKUP'),
+  `payment_status` SET('SUCCESS','FAILURE'),
+  `quantity_ordered` INT DEFAULT 0,
+  `shipping_id` INT DEFAULT NULL,
+  `category_id` INT DEFAULT NULL,
+  PRIMARY KEY (`order_id`)
+);
