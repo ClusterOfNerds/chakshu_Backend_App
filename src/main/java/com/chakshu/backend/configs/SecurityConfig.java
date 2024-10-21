@@ -1,5 +1,7 @@
 package com.chakshu.backend.configs;
 
+import com.chakshu.backend.entity.ApiRolePermission;
+import com.chakshu.backend.service.ApiRolePermissionService;
 import com.chakshu.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,11 +17,20 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private ApiRolePermissionService apiRolePermissionService;
+
+    @Autowired
+    public SecurityConfig (ApiRolePermissionService apiRolePermissionservice) {
+        this.apiRolePermissionService = apiRolePermissionservice;
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -32,7 +43,19 @@ public class SecurityConfig {
                          .expiredUrl("/Error")
 
                 )
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> {
+                    List<ApiRolePermission> rolePermissions = fetchRoleBasedPermission();
+                    for(ApiRolePermission apiRolePermission : rolePermissions) {
+                        String role = apiRolePermission.getRolesPermitted();
+                        String api  = apiRolePermission.getApi();
+                        Arrays.asList(role.split("\\.")).stream().forEach(r ->
+                            auth.requestMatchers(api).hasRole(r)
+                        );
+
+                    }
+                    auth.anyRequest().authenticated();
+                }
+                )
                 .oauth2Login(oauth -> oauth.defaultSuccessUrl("/getUser",true))
                 .httpBasic(hb -> hb.disable())
                 .logout(logout -> logout
@@ -69,6 +92,10 @@ public class SecurityConfig {
         daoAuthenticationProvider.setUserDetailsService(userService);
         return daoAuthenticationProvider;
 
+    }
+
+    private List<ApiRolePermission> fetchRoleBasedPermission() {
+        return apiRolePermissionService.getAllRoleBasedPermission();
     }
 
 }
