@@ -9,17 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Configuration
 @EnableWebSecurity
@@ -35,28 +33,34 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .sessionManagement((session) -> session
-                         .sessionFixation((sessionFixation) -> sessionFixation
-                                 .newSession()
-                         )
-                         .maximumSessions(1)
-                         .expiredUrl("/Error")
-
+                .cors(cors -> cors // Enable CORS with settings from WebMvcConfigurer
+                        .configurationSource(request -> {
+                            var corss = new CorsConfiguration();
+                            corss.setAllowedOrigins(Collections.singletonList("http://localhost:3000")); // Allowed origin
+                            corss.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed methods
+                            corss.setAllowedHeaders(Collections.singletonList("*")); // Allowed headers
+                            corss.setAllowCredentials(true); // Allow credentials
+                            return corss;
+                        })
                 )
+                .csrf().disable()
                 .authorizeHttpRequests(auth -> {
                     List<ApiRolePermission> rolePermissions = fetchRoleBasedPermission();
                     for(ApiRolePermission apiRolePermission : rolePermissions) {
-                        String role = apiRolePermission.getRolesPermitted();
+                        if(Objects.isNull(apiRolePermission.getRolesPermitted())) {
+                            apiRolePermission.setRolesPermitted("DEVELOPER");
+                        }
+                        String[] roles = apiRolePermission.getRolesPermitted().split("\\.");
                         String api  = apiRolePermission.getApi();
-                        Arrays.asList(role.split("\\.")).stream().forEach(r ->
-                            auth.requestMatchers(api).hasRole(r)
-                        );
+                        for (String role : roles) {
+                            auth.requestMatchers(api).hasRole(role);
+                        }
 
                     }
                     auth.anyRequest().authenticated();
                 }
                 )
-                .oauth2Login(oauth -> oauth.defaultSuccessUrl("/getUser",true))
+                .oauth2Login(oauth -> oauth.defaultSuccessUrl("http://localhost:3000/mainPage",true))
                 .httpBasic(hb -> hb.disable())
                 .logout(logout -> logout
                         .deleteCookies("JSESSIONID")
