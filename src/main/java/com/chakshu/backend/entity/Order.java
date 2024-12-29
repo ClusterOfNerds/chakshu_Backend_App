@@ -3,6 +3,9 @@ package com.chakshu.backend.entity;
 import com.chakshu.backend.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.io.Serializable;
+
 @Entity
 @Getter
 @Setter
@@ -10,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+public class Order implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
